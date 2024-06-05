@@ -1,7 +1,7 @@
 // Note yuhec: La constante n'était pas nécessaire pour `express` et `axios`
 import express, { Application, Request, Response } from "express";
 import axios, { AxiosResponse } from "axios";
-import { PokemonResponse, PokemonType } from "./types";
+import { PokemonResponse, PokemonTypeInfos, PokemonTypeName } from "./types";
 
 const app: Application = express();
 
@@ -11,7 +11,7 @@ app.get("/pokemon/:name", async (req: Request, res: Response) => {
   try {
     const data: PokemonResponse = await fetchPokemonData(name);
     if (data && data.types) {
-      const types: string[] = getPokemonTypes(data);
+      const types: PokemonTypeName[] = getPokemonTypes(data);
       // res.status(200).send(JSON.stringify(types)); // Pour une réponse en une seule ligne
       res.status(200).json(types); // Note yuhec: .json peut être utilisé, sinon, au lieu de .send et JSON.stringify
     } else {
@@ -31,10 +31,12 @@ app.get("/pokemon/:name", async (req: Request, res: Response) => {
 
 // Utils
 
-const getPokemonTypes = (data: PokemonResponse): string[] => {
-  return data.types
-    .filter(typeInfo => typeInfo?.type?.name)
-    .map(typeInfo => typeInfo.type.name);
+const getPokemonTypes = (data: PokemonResponse): PokemonTypeName[] => {
+  // Note yuhec: Alternative pour itérer sur la liste et JUSTE ajouter le nom du type à la liste, quand le prédicat (filter) est true
+  return data.types.reduce((types: PokemonTypeName[], { type }: PokemonTypeInfos) => {
+    if (type?.name) types.push(type.name); // Note yuhec: On peut éviter de faire typeInfo?.type?.name ou `typeInfo && typeInfo.type && typeInfo.type.name`
+    return types;
+  }, []);
 };
 
 const fetchPokemonData = async (name: string): Promise<PokemonResponse> => {

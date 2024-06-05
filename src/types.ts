@@ -1,9 +1,11 @@
-export interface PokemonType {
+export type PokemonTypeName = string;
+
+export interface PokemonTypeInfos {
   type: {
-    name: string;
+    name: PokemonTypeName;
   };
 }
 
 export interface PokemonResponse {
-  types: PokemonType[];
+  types: PokemonTypeInfos[];
 }
