@@ -9,14 +9,22 @@ app.get("/pokemon/:name", async (req: Request, res: Response) => {
   const name: string = req.params.name;
 
   try {
-    const data: PokemonResponse = await fetchPokemonData(name);
-    if (data && data.types) {
-      const types: PokemonTypeName[] = getPokemonTypes(data);
-      // res.status(200).send(JSON.stringify(types)); // Pour une réponse en une seule ligne
-      res.status(200).json(types); // Note yuhec: .json peut être utilisé, sinon, au lieu de .send et JSON.stringify
+    const response: AxiosResponse<PokemonResponse> = await fetchPokemonData(name);
+    
+    if (response.status === 200) {
+      const data: PokemonResponse = response.data;
+
+      if (data && data.types) {
+        const types: PokemonTypeName[] = getPokemonTypes(data);
+        // res.status(200).send(JSON.stringify(types)); // Pour une réponse en une seule ligne
+        res.status(200).json(types); // Note yuhec: .json peut être utilisé, sinon, au lieu de .send et JSON.stringify
+      } else {
+        // Note yuhec: 400 au lieu de 500
+        res.status(400).send("Invalid Pokémon data structure");
+      }
     } else {
-      // Note yuhec: 400 au lieu de 500
-      res.status(400).send("Invalid Pokémon data structure");
+      // Note yuhec: response.status au lieu de 500
+      res.status(response.status).send("Failed to fetch Pokémon data");
     }
   } catch (error) {
     console.error(error);
@@ -39,9 +47,8 @@ const getPokemonTypes = (data: PokemonResponse): PokemonTypeName[] => {
   }, []);
 };
 
-const fetchPokemonData = async (name: string): Promise<PokemonResponse> => {
-  const response: AxiosResponse<PokemonResponse> = await axios.get<PokemonResponse>(`https://pokeapi.co/api/v2/pokemon/${name}`);
-  return response.data;
+const fetchPokemonData = async (name: string): Promise<AxiosResponse<PokemonResponse>> => {
+  return axios.get<PokemonResponse>(`https://pokeapi.co/api/v2/pokemon/${name}`);
 };
 
 
